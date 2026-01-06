@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function handleOrderConfirmation() {
     // 1. Collect Data
-    const fullName = document.querySelector('input[placeholder*="Full Name"]')?.value;
-    const phone = document.querySelector('input[placeholder*="05"]')?.value;
+    const fullName = document.querySelector('input[placeholder*="full name" i]')?.value;
+const phone = document.querySelector('input[placeholder*="05 / 06 / 07"]')?.value;
     const address = document.querySelector('textarea')?.value;
 
     if (!fullName || !phone) {
