@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalog | shopyZ</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">shopyZ</a>
+        <div class="nav-icons">
+            <i data-lucide="search"></i>
+            <span>EN ▾</span>
+            <i data-lucide="heart"></i>
+            <a href="checkout.html" style="color: inherit;"><i data-lucide="shopping-bag"></i></a>
+        </div>
+    </header>
+
+    <div class="filter-container">
+        <button class="filter-pill active">All</button>
+        <button class="filter-pill">Accessories</button>
+        <button class="filter-pill">Electronics</button>
+        <button class="filter-pill">Apparel</button>
+        <button class="filter-pill">Home Decor</button>
+        <button class="filter-pill">Stationery</button>
+        <button class="filter-pill"><i data-lucide="heart" style="width:14px; display:inline; vertical-align:middle;"></i> Favorites</button>
+    </div>
+
+    <div style="padding: 0 5% 30px;">
+        <select style="padding: 10px; border-radius: 8px; border: 1px solid #eee; background: white; min-width: 150px;">
+            <option>Default</option>
+            <option>Price: Low to High</option>
+            <option>Price: High to Low</option>
+        </select>
+    </div>
+
+        <main class="product-grid">
+        <a href="product-detail.html" class="product-card">
+            <div class="product-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400" alt="Astral Minimalist Watch">
+            </div>
+            <div class="product-info">
+                <p class="product-category">Accessories</p>
+                <h3 class="product-title">Astral Minimalist Watch</h3>
+                <p class="product-price">189,99 DZD</p>
+            </div>
+        </a>
+
+        <div class="product-card">
+            <div class="product-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400" alt="Premium Headphones">
+            </div>
+            <div class="product-info">
+                <p class="product-category">Electronics</p>
+                <h3 class="product-title">Sonic Pro Headphones</h3>
+                <p class="product-price">450,00 DZD</p>
+            </div>
+        </div>
+
+        <div class="product-card">
+            <div class="product-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&q=80&w=400" alt="Modern Lamp">
+            </div>
+            <div class="product-info">
+                <p class="product-category">Home Decor</p>
+                <h3 class="product-title">Luna Table Lamp</h3>
+                <p class="product-price">320,00 DZD</p>
+            </div>
+        </div>
+
+        <div class="product-card">
+            <div class="product-image-wrapper">
+                <img src="https://images.unsplash.com/photo-1553062407-98eeb94c6a62?auto=format&fit=crop&q=80&w=400" alt="Backpack">
+            </div>
+            <div class="product-info">
+                <p class="product-category">Accessories</p>
+                <h3 class="product-title">Urban Explorer Pack</h3>
+                <p class="product-price">275,00 DZD</p>
+            </div>
+        </div>
+    </main>
+
+
+    <div class="chat-widget">
+        <i data-lucide="message-square-text"></i>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

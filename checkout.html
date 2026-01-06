@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | shopyZ</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">shopyZ</a>
+        <div class="nav-icons">
+            <i data-lucide="search"></i>
+            <span>EN ▾</span>
+            <i data-lucide="shopping-bag"></i>
+        </div>
+    </header>
+
+    <div style="padding: 20px 5%;">
+        <a href="catalog.html" style="text-decoration:none; color:var(--text-gray); font-size:14px;">
+            <i data-lucide="chevron-left" style="width:14px; vertical-align:middle;"></i> BACK TO CATALOG
+        </a>
+    </div>
+
+    <main class="checkout-container">
+        <section class="form-section">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:30px;">
+                <i data-lucide="user" style="color:var(--primary-purple)"></i>
+                <h2 style="font-size:22px;">Customer Information</h2>
+            </div>
+
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" placeholder="Enter your full name">
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" placeholder="05 / 06 / 07 ...">
+            </div>
+
+            <h2 style="font-size:18px; margin: 40px 0 20px;">LOGISTICS</h2>
+
+            <div class="form-group">
+                <label>Wilaya (Algeria)</label>
+               <select id="wilaya-select">
+    <option value="01">01 - Adrar</option>
+    <option value="06">06 - Béjaïa</option>
+    <option value="16" selected>16 - Alger</option>
+    <option value="19">19 - Sétif</option>
+    <option value="25">25 - Constantine</option>
+    <option value="31">31 - Oran</option>
+    <option value="35">35 - Boumerdès</option>
+</select>
+
+            </div>
+
+            <div class="form-group">
+                <label>Delivery Type</label>
+                <div class="delivery-toggle">
+                    <button class="toggle-btn active">HOME</button>
+                    <button class="toggle-btn">STOP DESK</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Exact Delivery Address</label>
+                <textarea rows="3" placeholder="Ex: Cité 123 logts, Bat 4, N° 12..."></textarea>
+            </div>
+        </section>
+
+        <aside>
+            <div class="summary-card">
+                <h2 style="margin-bottom:30px; letter-spacing:1px;">SUMMARY</h2>
+                
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>189,99 DZD</span>
+                </div>
+                
+                <div class="summary-row">
+                    <span>Shipping (Home)</span>
+                    <span>600 DZD</span>
+                </div>
+
+                <div class="summary-total">
+                    <span style="font-size:18px; font-weight:400;">Total Payable</span>
+                    <span style="font-size:32px; font-weight:700;">789,99 DZD</span>
+                </div>
+
+                <button class="btn-confirm">
+                    <i data-lucide="truck"></i>
+                    Confirm Order
+                </button>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        
+        // Simple toggle logic
+        const btns = document.querySelectorAll('.toggle-btn');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        // PASTE YOUR FIREBASE KEYS HERE EXACTLY AS YOU HAD THEM
+        apiKey: "AIzaSyBkA6n4q-7suEICnRZcrgAnBtZ2bwrQyL8",
+        authDomain: "shopyz-f79d0.firebaseapp.com",
+        databaseURL: "https://shopyz-f79d0-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "shopyz-f79d0",
+        storageBucket: "shopyz-f79d0.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+
+      // Initialize Firebase and make it global so cart.js can use it
+      firebase.initializeApp(firebaseConfig);
+      window.database = firebase.database(); 
+      console.log("Firebase Initialized");
+    </script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/main.js"></script>
+
+    <script src="js/cart.js"></script>
+</body>
+</html>
+
