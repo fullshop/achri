@@ -1,0 +1,295 @@
+/* Google Font for that clean minimalist look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+:root {
+    --primary-purple: #3F3DBC;
+    --bg-light: #F8F9FB;
+    --text-dark: #1A1A1A;
+    --text-gray: #666666;
+    --white: #ffffff;
+    --border-radius: 24px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--white);
+    color: var(--text-dark);
+}
+
+/* Header Styles */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 5%;
+    background: var(--white);
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-purple);
+    text-decoration: none;
+}
+
+.nav-icons {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+/* Button Component */
+.btn-primary {
+    background-color: var(--white);
+    color: var(--primary-purple);
+    padding: 12px 30px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary:hover {
+    background-color: #f0f0f0;
+}
+
+/* Chat Floating Button */
+.chat-widget {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--primary-purple);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 15px rgba(63, 61, 188, 0.3);
+    cursor: pointer;
+}
+/* Catalog Filters (Pills) */
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 20px 5%;
+    margin-bottom: 20px;
+}
+
+.filter-pill {
+    padding: 10px 24px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    background: white;
+    color: var(--text-gray);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.filter-pill.active {
+    background: var(--primary-purple);
+    color: white;
+    border-color: var(--primary-purple);
+}
+
+/* Product Grid */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 0 5%;
+}
+
+.product-card {
+    text-decoration: none;
+    color: inherit;
+}
+
+.product-image-wrapper {
+    background: #f0f0f0;
+    border-radius: var(--border-radius);
+    padding: 40px;
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.product-image-wrapper img {
+    max-width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+    transform: scale(1.05);
+}
+
+.product-info {
+    padding: 15px 5px;
+}
+
+.product-category {
+    font-size: 12px;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.product-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 5px 0;
+}
+
+.product-price {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+/* Checkout Form Layout */
+.checkout-container {
+    padding: 20px 5%;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 40px;
+}
+
+.form-section {
+    background: var(--white);
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-gray);
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 18px;
+    background: var(--bg-light);
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+}
+
+/* Delivery Toggle */
+.delivery-toggle {
+    display: flex;
+    background: var(--bg-light);
+    border-radius: 16px;
+    padding: 5px;
+    margin-bottom: 20px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.toggle-btn.active {
+    background: var(--primary-purple);
+    color: white;
+}
+
+/* Summary Card */
+.summary-card {
+    background: var(--primary-purple);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    color: white;
+    height: fit-content;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    opacity: 0.8;
+}
+
+.summary-total {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.btn-confirm {
+    width: 100%;
+    background: var(--white);
+    color: var(--primary-purple);
+    padding: 20px;
+    border-radius: 16px;
+    border: none;
+    font-weight: 700;
+    margin-top: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 900px) {
+    .checkout-container { grid-template-columns: 1fr; }
+}
+/* Smooth transitions for a premium feel */
+button, input, select, .product-card {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Better focus states for accessibility */
+input:focus, select:focus, textarea:focus {
+    outline: 2px solid var(--primary-purple);
+    background: #fff;
+}
+
+/* Adjust the shopping bag icon to show a "1" like your image */
+.nav-icons .shopping-bag-container {
+    position: relative;
+}
+
+.badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--primary-purple);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
