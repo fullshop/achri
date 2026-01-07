@@ -10,13 +10,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function handleOrderConfirmation() {
-    // 1. Collect Data
-    const fullName = document.querySelector('input[placeholder*="full name" i]')?.value;
-const phone = document.querySelector('input[placeholder*="05 / 06 / 07"]')?.value;
+    // 1. Get Values using the new IDs
+    const fullName = document.getElementById('full_name')?.value;
+    const phone = document.getElementById('phone_number')?.value;
+    const wilaya = document.getElementById('wilaya-select')?.value; // Matching your select ID
+    const deliveryType = document.querySelector('.toggle-btn.active')?.innerText;
     const address = document.querySelector('textarea')?.value;
+    
+    // Total price fix: your HTML uses a span inside .summary-total, not an ID
+    const total = document.querySelector('.summary-total span:last-child')?.innerText;
 
-    if (!fullName || !phone) {
-        alert("Please enter Name and Phone");
+    // 2. Validation
+    if (!fullName || fullName.trim() === "" || !phone || phone.trim() === "") {
+        alert("Please enter your Name and Phone number.");
         return;
     }
 
