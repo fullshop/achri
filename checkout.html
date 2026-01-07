@@ -32,30 +32,28 @@
             </div>
 
             <div class="form-group">
-    <label>Full Name</label>
-    <input type="text" id="full_name" placeholder="Enter your full name">
-</div>
+                <label>Full Name</label>
+                <input type="text" id="full_name" placeholder="Enter your full name">
+            </div>
 
-<div class="form-group">
-    <label>Phone Number</label>
-    <input type="tel" id="phone_number" placeholder="05 / 06 / 07 ...">
-</div>
-
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="phone_number" placeholder="05 / 06 / 07 ...">
+            </div>
 
             <h2 style="font-size:18px; margin: 40px 0 20px;">LOGISTICS</h2>
 
             <div class="form-group">
                 <label>Wilaya (Algeria)</label>
-               <select id="wilaya-select">
-    <option value="01">01 - Adrar</option>
-    <option value="06">06 - Béjaïa</option>
-    <option value="16" selected>16 - Alger</option>
-    <option value="19">19 - Sétif</option>
-    <option value="25">25 - Constantine</option>
-    <option value="31">31 - Oran</option>
-    <option value="35">35 - Boumerdès</option>
-</select>
-
+                <select id="wilaya-select">
+                    <option value="01">01 - Adrar</option>
+                    <option value="06">06 - Béjaïa</option>
+                    <option value="16" selected>16 - Alger</option>
+                    <option value="19">19 - Sétif</option>
+                    <option value="25">25 - Constantine</option>
+                    <option value="31">31 - Oran</option>
+                    <option value="35">35 - Boumerdès</option>
+                </select>
             </div>
 
             <div class="form-group">
@@ -68,7 +66,7 @@
 
             <div class="form-group">
                 <label>Exact Delivery Address</label>
-                <textarea rows="3" placeholder="Ex: Cité 123 logts, Bat 4, N° 12..."></textarea>
+                <textarea id="delivery_address" rows="3" placeholder="Ex: Cité 123 logts, Bat 4, N° 12..."></textarea>
             </div>
         </section>
 
@@ -88,22 +86,38 @@
 
                 <div class="summary-total">
                     <span style="font-size:18px; font-weight:400;">Total Payable</span>
-                    <span style="font-size:32px; font-weight:700;">789,99 DZD</span>
+                    <span id="total_payable_value" style="font-size:32px; font-weight:700;">789,99 DZD</span>
                 </div>
 
                 <button class="btn-confirm" onclick="handleOrderConfirmation()">
-    <i data-lucide="truck"></i>
-    Confirm Order
-</button>
-
+                    <i data-lucide="truck"></i>
+                    Confirm Order
+                </button>
             </div>
         </aside>
     </main>
 
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkA6n4q-7suEICnRZcrgAnBtZ2bwrQyL8",
+            authDomain: "shopyz-f79d0.firebaseapp.com",
+            databaseURL: "https://shopyz-f79d0-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "shopyz-f79d0",
+            storageBucket: "shopyz-f79d0.firebasestorage.app",
+            messagingSenderId: "285467474064",
+            appId: "1:285467474064:web:edd188f5ef255d49988015",
+            measurementId: "G-GQMVD6ELFE"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+    </script>
+
     <script>
         lucide.createIcons();
-        
-        // Simple toggle logic
         const btns = document.querySelectorAll('.toggle-btn');
         btns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -111,31 +125,8 @@
                 btn.classList.add('active');
             });
         });
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-    <script>
-      const firebaseConfig = {
-        // PASTE YOUR FIREBASE KEYS HERE EXACTLY AS YOU HAD THEM
-        apiKey: "AIzaSyBkA6n4q-7suEICnRZcrgAnBtZ2bwrQyL8",
-        authDomain: "shopyz-f79d0.firebaseapp.com",
-        databaseURL: "https://shopyz-f79d0-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "shopyz-f79d0",
-        storageBucket: "shopyz-f79d0.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-      };
-
-      // Initialize Firebase and make it global so cart.js can use it
-      firebase.initializeApp(firebaseConfig);
-      window.database = firebase.database(); 
-      console.log("Firebase Initialized");
     </script>
-
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="js/main.js"></script>
-
     <script src="js/cart.js"></script>
 </body>
 </html>
-
