@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>shopyZ | Find Your Perfect Style</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* CSS directly in file to ensure "Clear" view as per image 1000003636.jpg */
+        :root { --brand-purple: #3F3DBC; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #fff; }
+        header { display: flex; justify-content: space-between; padding: 20px 5%; align-items: center; }
+        .logo { color: var(--brand-purple); font-weight: 800; font-size: 26px; text-decoration: none; }
+        
+        .hero-banner { 
+            background: var(--brand-purple); 
+            margin: 20px; 
+            border-radius: 30px; 
+            display: flex; 
+            min-height: 550px; 
+            color: white; 
+            overflow: hidden; 
+        }
+        .hero-text { flex: 1; padding: 60px; display: flex; flex-direction: column; justify-content: center; }
+        .hero-image { 
+            flex: 1; 
+            background: linear-gradient(to right, var(--brand-purple), transparent), 
+                        url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80'); 
+            background-size: cover; 
+            background-position: center;
+        }
+        .shop-btn { 
+            background: white; 
+            color: var(--brand-purple); 
+            padding: 16px 40px; 
+            border-radius: 14px; 
+            text-decoration: none; 
+            font-weight: 700; 
+            width: fit-content;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="catalog.html" class="shop-btn">Shop Now</a>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <i data-lucide="search"></i>
+            <span style="font-size: 14px; font-weight: 600;">EN ▾</span>
+            <i data-lucide="heart"></i>
+            <i data-lucide="shopping-bag"></i>
+        </div>
+    </header>
+
+    <div class="hero-banner">
+        <div class="hero-text">
+            <span style="text-transform: uppercase; font-size: 12px; letter-spacing: 2px; opacity: 0.8;">Summer 2024 Collection</span>
+            <h1 style="font-size: 52px; line-height: 1.1; margin: 20px 0;">Find Your <br> Perfect Style.</h1>
+            <p style="font-size: 18px; opacity: 0.9; max-width: 450px;">
+                Welcome to shopyZ. We bring quality craftsmanship to your doorstep across Algeria.
+            </p>
+            <a href="./catalog.html" class="shop-btn">Shop Now</a>
+
+        </div>
+        <div class="hero-image"></div>
+    </div>
+
+    <div style="position: fixed; bottom: 30px; right: 30px; background: var(--brand-purple); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+        <i data-lucide="message-square"></i>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
