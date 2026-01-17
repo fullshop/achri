@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Achri - Algerian Shop</title>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        * { font-family: 'Cairo', sans-serif; transition: all 0.2s ease-in-out; -webkit-tap-highlight-color: transparent; }
+        .hidden { display: none !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        #logo { user-select: none; -webkit-user-select: none; touch-action: none; position: relative; }
+        .hold-active { transform: scale(0.9); color: #ea580c; }
+        #hold-progress { height: 4px; background: #ea580c; width: 0%; position: absolute; bottom: 0; left: 0; transition: width 3s linear; }
+
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #ea580c; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .liked { color: #ef4444 !important; fill: #ef4444; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b sticky top-0 z-40 px-4 py-3 shadow-sm flex justify-between items-center">
+        <div id="logo-container" class="relative pb-1 flex items-center gap-2">
+            <!-- زر الرجوع الجديد -->
+            <button id="nav-back-btn" onclick="handleBack()" class="hidden p-2 hover:bg-gray-100 rounded-full transition-all active:scale-90">
+                <i id="back-icon" data-lucide="arrow-right"></i>
+            </button>
+            
+            <div id="logo" onclick="goHome()" class="text-2xl font-black text-orange-600 cursor-pointer">Achri</div>
+            <div id="hold-progress"></div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <button onclick="toggleLang()" id="lang-btn" class="bg-gray-100 px-3 py-1 rounded-full text-xs font-bold border">English</button>
+            <div onclick="showView('cart')" class="relative cursor-pointer p-2">
+                <i data-lucide="shopping-cart"></i>
+                <span id="cart-count" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">0</span>
+            </div>
+            <button id="admin-nav-btn" onclick="showView('admin')" class="hidden border-2 border-orange-600 text-orange-600 px-2 py-1 rounded-lg text-xs font-black">Admin</button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4">
+        
+        <!-- HOME VIEW -->
+        <div id="view-home" class="view">
+            <div id="category-bar" class="flex gap-2 overflow-x-auto pb-4 no-scrollbar mb-2"></div>
+            <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        </div>
+
+        <!-- CART VIEW -->
+        <div id="view-cart" class="view hidden">
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                    <h2 class="text-xl font-bold mb-4">سلة التسوق</h2>
+                    <div id="cart-items" class="divide-y mb-4"></div>
+                    <div class="border-t pt-4 space-y-2 font-bold text-sm">
+                        <div class="flex justify-between text-gray-500"><span>التوصيل</span><span id="shipping-price">0 DA</span></div>
+                        <div class="flex justify-between text-xl text-orange-600"><span>الإجمالي</span><span id="total-price">0 DA</span></div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                    <input id="form-name" class="w-full border p-3 rounded-xl outline-none" placeholder="الاسم واللقب">
+                    <input id="form-phone" class="w-full border p-3 rounded-xl outline-none" placeholder="رقم الهاتف">
+                    <select id="form-wilaya" class="w-full border p-3 rounded-xl outline-none" onchange="updatePrices()"></select>
+                    <input id="form-address" class="w-full border p-3 rounded-xl outline-none" placeholder="العنوان الكامل">
+                    <div class="bg-gray-100 p-2 rounded-xl flex gap-4 text-sm font-bold">
+                        <label class="flex-1 text-center cursor-pointer"><input type="radio" name="del-type" value="home" checked onchange="updatePrices()"> منزل</label>
+                        <label class="flex-1 text-center cursor-pointer"><input type="radio" name="del-type" value="desk" onchange="updatePrices()"> مكتب</label>
+                    </div>
+                    <button onclick="submitOrder()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95">تأكيد الطلب</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN VIEW -->
+        <div id="view-admin" class="view hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border max-w-lg mx-auto shadow-lg">
+                <h2 class="text-xl font-bold mb-4 text-orange-600 text-center">إضافة منتج جديد</h2>
+                <div class="space-y-4">
+                    <input id="p-name" class="w-full border p-3 rounded-xl outline-none" placeholder="اسم المنتج">
+                    <input id="p-price" class="w-full border p-3 rounded-xl outline-none" type="number" placeholder="السعر">
+                    <input id="p-cat" class="w-full border p-3 rounded-xl outline-none" placeholder="التصنيف">
+                    <textarea id="p-desc" class="w-full border p-3 rounded-xl outline-none h-32" placeholder="وصف المنتج"></textarea>
+                    <div class="border-2 border-dashed p-4 rounded-xl text-center relative">
+                        <input id="p-imgs" type="file" multiple accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                        <p class="text-gray-400 text-sm">ارفع صور المنتج هنا</p>
+                    </div>
+                    <button onclick="addProduct()" id="btn-save" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2">
+                        <span>حفظ في المتجر</span>
+                        <div id="loader" class="loader hidden"></div>
+                    </button>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border shadow-sm">
+                <h2 class="text-xl font-bold text-center mb-4">الطلبات الواردة</h2>
+                <div id="orders-list-content" class="space-y-4 text-xs"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- PRODUCT DETAIL MODAL -->
+    <div id="modal-detail" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-2 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-2xl max-h-[95vh] rounded-3xl overflow-y-auto no-scrollbar relative shadow-2xl">
+            <button onclick="closeDetail()" class="absolute top-4 right-4 bg-white/80 p-2 rounded-full z-[102] text-gray-800 shadow"><i data-lucide="x"></i></button>
+            
+            <div class="relative h-80 bg-gray-100">
+                <div id="detail-images" class="flex h-full w-full items-center justify-center overflow-hidden"></div>
+                <button onclick="prevImg()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/40 p-2 rounded-full"><i data-lucide="chevron-left"></i></button>
+                <button onclick="nextImg()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/40 p-2 rounded-full"><i data-lucide="chevron-right"></i></button>
+                <div id="img-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1"></div>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 id="det-name" class="text-2xl font-black"></h2>
+                        <p id="det-price" class="text-xl text-orange-600 font-bold"></p>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <button onclick="toggleLike()" id="btn-like" class="p-3 bg-red-50 text-red-500 rounded-full active:scale-90"><i data-lucide="heart"></i></button>
+                        <span id="det-likes" class="text-xs font-bold text-gray-500">0</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="doShare('wa')" class="bg-green-500 text-white py-2 rounded-xl font-bold text-xs">واتساب</button>
+                    <button onclick="doShare('fb')" class="bg-blue-600 text-white py-2 rounded-xl font-bold text-xs">فيسبوك</button>
+                    <button onclick="doShare('copy')" class="bg-gray-200 text-gray-700 py-2 rounded-xl font-bold text-xs">نسخ</button>
+                </div>
+
+                <div class="border-t pt-4">
+                    <h3 class="font-bold mb-2 text-sm text-gray-400">الوصف</h3>
+                    <p id="det-desc" class="text-sm text-gray-600 leading-relaxed"></p>
+                </div>
+
+                <div class="border-t pt-4">
+                    <h3 class="font-bold mb-3 text-sm text-gray-400">التعليقات</h3>
+                    <div id="det-comments" class="space-y-2 mb-4 max-h-40 overflow-y-auto no-scrollbar"></div>
+                    <div class="flex gap-2">
+                        <input id="comm-input" class="flex-1 border p-3 rounded-xl text-xs outline-none" placeholder="أضف تعليق...">
+                        <button onclick="addComment()" class="bg-orange-600 text-white px-4 rounded-xl"><i data-lucide="send" style="width:18px"></i></button>
+                    </div>
+                </div>
+                
+                <button onclick="addToCartFromDetail()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black text-lg">إضافة للسلة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login -->
+    <div id="modal-login" class="fixed inset-0 bg-black/80 z-[120] flex items-center justify-center hidden p-4">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl">
+            <h2 class="text-2xl font-black mb-6">Admin Login</h2>
+            <input id="login-pass" type="password" class="w-full border-2 p-4 rounded-2xl mb-4 text-center tracking-widest text-2xl outline-none" placeholder="•••••">
+            <button onclick="handleLogin()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black">LOGIN</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyANZmMR3E5-QnkO-SgIY3yv5i2n7AciLkU",
+            authDomain: "achri-822f1.firebaseapp.com",
+            databaseURL: "https://achri-822f1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "achri-822f1",
+            storageBucket: "achri-822f1.firebasestorage.app",
+            messagingSenderId: "1067421301667",
+            appId: "1:1067421301667:web:e1a47b79e2911c6d17b816"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let allProducts = [];
+        let cart = [];
+        let lang = 'ar';
+        let currentPId = null;
+        let currentImgIdx = 0;
+        let holdTimer;
+        let currentView = 'home';
+        const wilayas = ["01 Adrar", "02 Chlef", "03 Laghouat", "04 Oum El Bouaghi", "05 Batna", "06 Bejaia", "07 Biskra", "08 Bechar", "09 Blida", "10 Bouira", "11 Tamanrasset", "12 Tebessa", "13 Tlemcen", "14 Tiaret", "15 Tizi Ouzou", "16 Alger", "17 Djelfa", "18 Jijel", "19 Setif", "20 Saida", "21 Skikda", "22 Sidi Bel Abbes", "23 Annaba", "24 Guelma", "25 Constantine", "26 Medea", "27 Mostaganem", "28 M'Sila", "29 Mascara", "30 Ouargla", "31 Oran", "32 El Bayadh", "33 Illizi", "34 Bordj Bou Arreridj", "35 Boumerdes", "36 El Tarf", "37 Tindouf", "38 Tissemsilt", "39 El Oued", "40 Khenchela", "41 Souk Ahras", "42 Tipaza", "43 Mila", "44 Ain Defla", "45 Naama", "46 Ain Temouchent", "47 Ghardaia", "48 Relizane", "49 El M'Ghair", "50 El Meniaa", "51 Ouled Djellal", "52 Bordj Baji Mokhtar", "53 Beni Abbes", "54 Timimoun", "55 Touggourt", "56 Djanet", "57 In Salah", "58 In Guezzam"];
+
+        window.onload = () => {
+            initWilayas();
+            loadProducts();
+            setupSecretAdmin();
+            lucide.createIcons();
+        };
+
+        // --- NAVIGATION & BACK BUTTON LOGIC ---
+        function showView(v) {
+            currentView = v;
+            document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-' + v).classList.remove('hidden');
+            
+            // تحديث رؤية زر الرجوع
+            const backBtn = document.getElementById('nav-back-btn');
+            backBtn.classList.toggle('hidden', v === 'home' && !currentPId);
+            
+            if(v === 'admin') loadOrders();
+            window.scrollTo(0,0);
+        }
+
+        function handleBack() {
+            // إذا كان المودال مفتوحاً، أغلقه
+            if (currentPId) {
+                closeDetail();
+                return;
+            }
+            // إذا كنت في صفحة أخرى، عد للرئيسية
+            if (currentView !== 'home') {
+                goHome();
+            }
+        }
+
+        function goHome() {
+            showView('home');
+        }
+
+        // --- PRODUCT LOGIC ---
+        function loadProducts() {
+            db.ref('products').on('value', snap => {
+                const data = snap.val();
+                allProducts = data ? Object.keys(data).map(k => ({id:k, ...data[k]})) : [];
+                renderProducts();
+                renderCategories();
+            });
+        }
+
+        function renderProducts(list = allProducts) {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = list.map(p => `
+                <div onclick="openDetail('${p.id}')" class="bg-white rounded-2xl border shadow-sm overflow-hidden cursor-pointer active:scale-95 transition">
+                    <img src="${p.images[0]}" class="w-full aspect-square object-cover bg-gray-50 pointer-events-none">
+                    <div class="p-3 pointer-events-none">
+                        <h3 class="font-bold text-sm truncate">${p.name}</h3>
+                        <p class="text-orange-600 font-black">${p.price} DA</p>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // --- DETAIL MODAL ---
+        function openDetail(id) {
+            currentPId = id; currentImgIdx = 0;
+            const p = allProducts.find(x => x.id === id);
+            document.getElementById('modal-detail').classList.remove('hidden');
+            document.getElementById('nav-back-btn').classList.remove('hidden');
+            
+            document.getElementById('det-name').innerText = p.name;
+            document.getElementById('det-price').innerText = p.price + " DA";
+            document.getElementById('det-desc').innerText = p.description || "";
+            document.getElementById('det-likes').innerText = p.likes || 0;
+            updateDetailImgs();
+            
+            const comms = p.comments ? Object.values(p.comments).reverse() : [];
+            document.getElementById('det-comments').innerHTML = comms.map(c => `<div class="bg-gray-50 p-2 rounded-xl text-[10px] border"><b>مستخدم:</b> ${c.text}</div>`).join('');
+            document.getElementById('btn-like').classList.toggle('liked', !!localStorage.getItem('liked_'+id));
+            lucide.createIcons();
+        }
+
+        function updateDetailImgs() {
+            const p = allProducts.find(x => x.id === currentPId);
+            document.getElementById('detail-images').innerHTML = `<img src="${p.images[currentImgIdx]}" class="h-full w-full object-cover">`;
+            document.getElementById('img-dots').innerHTML = p.images.map((_, i) => `<div class="w-1.5 h-1.5 rounded-full ${i === currentImgIdx ? 'bg-orange-600 w-3' : 'bg-gray-300'} transition-all"></div>`).join('');
+        }
+
+        function nextImg() { const p = allProducts.find(x => x.id === currentPId); currentImgIdx = (currentImgIdx + 1) % p.images.length; updateDetailImgs(); }
+        function prevImg() { const p = allProducts.find(x => x.id === currentPId); currentImgIdx = (currentImgIdx - 1 + p.images.length) % p.images.length; updateDetailImgs(); }
+        
+        function closeDetail() { 
+            document.getElementById('modal-detail').classList.add('hidden'); 
+            currentPId = null; 
+            // إخفاء زر الرجوع إذا كنا في الرئيسية
+            if(currentView === 'home') document.getElementById('nav-back-btn').classList.add('hidden');
+        }
+
+        // --- LIKE & SHARE ---
+        function toggleLike() {
+            const key = 'liked_' + currentPId;
+            if(localStorage.getItem(key)) return alert("لقد أعجبت به مسبقاً");
+            db.ref('products/' + currentPId + '/likes').transaction(c => (c || 0) + 1);
+            localStorage.setItem(key, 'true');
+            document.getElementById('btn-like').classList.add('liked');
+        }
+
+        function doShare(type) {
+            const url = window.location.href;
+            if(type === 'wa') window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(url)}`);
+            if(type === 'fb') window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+            if(type === 'copy') { navigator.clipboard.writeText(url); alert("تم النسخ!"); }
+        }
+
+        function addComment() {
+            const v = document.getElementById('comm-input').value; if(!v) return;
+            db.ref('products/' + currentPId + '/comments').push({ text: v });
+            document.getElementById('comm-input').value = "";
+        }
+
+        // --- ADMIN SECRETS ---
+        function setupSecretAdmin() {
+            const logo = document.getElementById('logo'); const progress = document.getElementById('hold-progress');
+            const onDown = () => { logo.classList.add('hold-active'); progress.style.width = '100%'; holdTimer = setTimeout(() => { document.getElementById('modal-login').classList.remove('hidden'); onUp(); }, 3000); };
+            const onUp = () => { clearTimeout(holdTimer); logo.classList.remove('hold-active'); progress.style.width = '0%'; };
+            logo.onmousedown = logo.ontouchstart = onDown; logo.onmouseup = logo.onmouseleave = logo.ontouchend = onUp;
+            logo.oncontextmenu = (e) => e.preventDefault();
+        }
+
+        function handleLogin() { if(document.getElementById('login-pass').value === '12346') { document.getElementById('modal-login').classList.add('hidden'); document.getElementById('admin-nav-btn').classList.remove('hidden'); showView('admin'); } else alert("خطأ!"); }
+
+        // --- CART & ORDERS ---
+        function addToCartFromDetail() { cart.push(allProducts.find(x => x.id === currentPId)); document.getElementById('cart-count').innerText = cart.length; renderCartUI(); closeDetail(); alert("تم الإضافة لسلة التسوق!"); }
+        function renderCartUI() { document.getElementById('cart-items').innerHTML = cart.map((p, i) => `<div class="flex justify-between py-2 text-xs"><span>${p.name}</span><b>${p.price} DA</b></div>`).join(''); updatePrices(); }
+        function updatePrices() { const sub = cart.reduce((s, p) => s + parseInt(p.price), 0); const del = document.querySelector('input[name="del-type"]:checked').value === 'home' ? 600 : 400; document.getElementById('shipping-price').innerText = del + " DA"; document.getElementById('total-price').innerText = (sub + del) + " DA"; }
+        
+        async function submitOrder() {
+            const n = document.getElementById('form-name').value; const p = document.getElementById('form-phone').value;
+            if(!n || !p || cart.length === 0) return alert("البيانات ناقصة");
+            await db.ref('orders').push({ customer: n, phone: p, wilaya: document.getElementById('form-wilaya').value, items: cart.map(i => i.name), total: document.getElementById('total-price').innerText, status: "قيد الانتظار", date: new Date().toLocaleString() });
+            alert("تم إرسال طلبك بنجاح!"); cart = []; location.reload();
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('p-name').value; const price = document.getElementById('p-price').value; const files = document.getElementById('p-imgs').files;
+            if(!name || !price || files.length === 0) return alert("البيانات ناقصة");
+            document.getElementById('loader').classList.remove('hidden');
+            const imgs = []; for(let f of files) imgs.push(await compressImg(f));
+            await db.ref('products').push({ name, price, category: document.getElementById('p-cat').value || 'عام', description: document.getElementById('p-desc').value, images: imgs, likes: 0 });
+            location.reload();
+        }
+
+        function loadOrders() {
+            db.ref('orders').on('value', snap => {
+                const list = snap.val() ? Object.values(snap.val()).reverse() : [];
+                document.getElementById('orders-list-content').innerHTML = list.map(o => `
+                    <div class="p-3 border rounded-xl bg-white shadow-sm text-xs">
+                        <div class="flex justify-between font-black text-orange-600"><span>${o.customer}</span><span>${o.total}</span></div>
+                        <p>${o.phone} | ${o.wilaya}</p><p class="italic text-gray-400">حالة: ${o.status}</p>
+                    </div>
+                `).join('');
+            });
+        }
+
+        // --- UTILS ---
+        function compressImg(file) {
+            return new Promise(res => {
+                const r = new FileReader(); r.readAsDataURL(file);
+                r.onload = e => {
+                    const img = new Image(); img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                        canvas.width = 400; canvas.height = img.height * (400 / img.width);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        res(canvas.toDataURL('image/jpeg', 0.7));
+                    }
+                }
+            });
+        }
+        function initWilayas() { document.getElementById('form-wilaya').innerHTML = wilayas.map(w => `<option>${w}</option>`).join(''); }
+        function renderCategories() { const cats = ['All', ...new Set(allProducts.map(p => p.category))]; document.getElementById('category-bar').innerHTML = cats.map(c => `<button onclick="renderProducts(allProducts.filter(p => '${c}' === 'All' || p.category === '${c}'))" class="bg-white border px-4 py-1 rounded-full text-[10px] font-bold shadow-sm active:bg-orange-600 active:text-white">${c}</button>`).join(''); }
+        
+        function toggleLang() { 
+            lang = lang === 'ar' ? 'en' : 'ar'; 
+            document.dir = lang === 'ar' ? 'rtl' : 'ltr'; 
+            document.getElementById('lang-btn').innerText = lang === 'ar' ? 'English' : 'العربية';
+            
+            // تغيير اتجاه السهم بناءً على اللغة
+            const backIcon = document.getElementById('back-icon');
+            backIcon.setAttribute('data-lucide', lang === 'ar' ? 'arrow-right' : 'arrow-left');
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
