@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Achri - Secure Algerian Shop</title>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        * { font-family: 'Cairo', sans-serif; transition: all 0.2s ease-in-out; -webkit-tap-highlight-color: transparent; }
+        .hidden { display: none !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        #logo { user-select: none; touch-action: none; position: relative; }
+        .hold-active { transform: scale(0.9); color: #ea580c; }
+        #hold-progress { height: 4px; background: #ea580c; width: 0%; position: absolute; bottom: 0; left: 0; transition: width 2s linear; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #ea580c; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .liked { color: #ef4444 !important; fill: #ef4444; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <!-- Navbar -->
+    <nav class="bg-white border-b sticky top-0 z-40 px-4 py-3 shadow-sm flex justify-between items-center">
+        <div class="relative flex items-center gap-2">
+            <button id="nav-back-btn" onclick="handleBack()" class="hidden p-2 hover:bg-gray-100 rounded-full active:scale-90">
+                <i id="back-icon" data-lucide="arrow-right"></i>
+            </button>
+            <div id="logo" onclick="goHome()" class="text-2xl font-black text-orange-600 cursor-pointer">Achri</div>
+            <div id="hold-progress"></div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <button onclick="toggleLang()" id="lang-btn" class="bg-gray-100 px-3 py-1 rounded-full text-xs font-bold border">English</button>
+            <div onclick="showView('cart')" class="relative cursor-pointer p-2">
+                <i data-lucide="shopping-cart"></i>
+                <span id="cart-count" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">0</span>
+            </div>
+            <!-- Admin Controls -->
+            <button id="admin-nav-btn" onclick="showView('admin')" class="hidden border-2 border-orange-600 text-orange-600 px-2 py-1 rounded-lg text-xs font-black">Dashboard</button>
+            <button id="logout-btn" onclick="handleLogout()" class="hidden bg-red-50 text-red-600 p-2 rounded-lg"><i data-lucide="log-out" style="width:16px"></i></button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4">
+        
+        <!-- HOME VIEW -->
+        <div id="view-home" class="view">
+            <div id="category-bar" class="flex gap-2 overflow-x-auto pb-4 no-scrollbar mb-2"></div>
+            <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        </div>
+
+        <!-- CART VIEW -->
+        <div id="view-cart" class="view hidden">
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border">
+                    <h2 class="text-xl font-bold mb-4">سلة التسوق</h2>
+                    <div id="cart-items" class="divide-y mb-4"></div>
+                    <div class="border-t pt-4 space-y-2 font-bold text-sm">
+                        <div class="flex justify-between text-gray-500"><span>التوصيل</span><span id="shipping-price">0 DA</span></div>
+                        <div class="flex justify-between text-xl text-orange-600"><span>الإجمالي</span><span id="total-price">0 DA</span></div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                    <input id="form-name" class="w-full border p-3 rounded-xl outline-none" placeholder="الاسم واللقب">
+                    <input id="form-phone" class="w-full border p-3 rounded-xl outline-none" placeholder="رقم الهاتف">
+                    <select id="form-wilaya" class="w-full border p-3 rounded-xl outline-none" onchange="updatePrices()"></select>
+                    <input id="form-address" class="w-full border p-3 rounded-xl outline-none" placeholder="العنوان الكامل">
+                    <div class="bg-gray-100 p-2 rounded-xl flex gap-4 text-sm font-bold">
+                        <label class="flex-1 text-center cursor-pointer"><input type="radio" name="del-type" value="home" checked onchange="updatePrices()"> منزل</label>
+                        <label class="flex-1 text-center cursor-pointer"><input type="radio" name="del-type" value="desk" onchange="updatePrices()"> مكتب</label>
+                    </div>
+                    <button onclick="submitOrder()" class="w-full bg-orange-600 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95">تأكيد الطلب</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN VIEW -->
+        <div id="view-admin" class="view hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border max-w-lg mx-auto shadow-lg">
+                <h2 class="text-xl font-bold mb-4 text-orange-600 text-center">إضافة منتج جديد</h2>
+                <div class="space-y-4">
+                    <input id="p-name" class="w-full border p-3 rounded-xl outline-none" placeholder="اسم المنتج">
+                    <input id="p-price" class="w-full border p-3 rounded-xl outline-none" type="number" placeholder="السعر">
+                    <input id="p-cat" class="w-full border p-3 rounded-xl outline-none" placeholder="التصنيف">
+                    <textarea id="p-desc" class="w-full border p-3 rounded-xl outline-none h-32" placeholder="وصف المنتج"></textarea>
+                    <div class="border-2 border-dashed p-4 rounded-xl text-center relative">
+                        <input id="p-imgs" type="file" multiple accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                        <p id="p-img-label" class="text-gray-400 text-sm">ارفع صور المنتج هنا</p>
+                    </div>
+                    <button onclick="addProduct()" id="btn-save" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold flex justify-center items-center gap-2">
+                        <span id="btn-save-text">حفظ في المتجر</span>
+                        <div id="loader" class="loader hidden"></div>
+                    </button>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border shadow-sm">
+                <h2 class="text-xl font-bold text-center mb-4">الطلبات الواردة</h2>
+                <div id="orders-list-content" class="space-y-4 text-xs"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Product Detail Modal -->
+    <div id="modal-detail" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-2 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-2xl max-h-[95vh] rounded-3xl overflow-y-auto no-scrollbar relative shadow-2xl">
+            <button onclick="closeDetail()" class="absolute top-4 right-4 bg-white/80 p-2 rounded-full z-[102] shadow"><i data-lucide="x"></i></button>
+            <div class="relative h-80 bg-gray-100">
+                <div id="detail-images" class="flex h-full w-full items-center justify-center overflow-hidden"></div>
+                <button onclick="prevImg()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/40 p-2 rounded-full"><i data-lucide="chevron-left"></i></button>
+                <button onclick="nextImg()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/40 p-2 rounded-full"><i data-lucide="chevron-right"></i></button>
+                <div id="img-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1"></div>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 id="det-name" class="text-2xl font-black"></h2>
+                        <p id="det-price" class="text-xl text-orange-600 font-bold"></p>
+                    </div>
+                </div>
+                <p id="det-desc" class="text-sm text-gray-600 leading-relaxed border-t pt-4"></p>
+                <button onclick="addToCartFromDetail()" class="w-full bg-orange-600 text-white py-4 rounded-2xl font-black text-lg">إضافة للسلة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="modal-login" class="fixed inset-0 bg-black/80 z-[120] flex items-center justify-center hidden p-4">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl space-y-4">
+            <h2 class="text-2xl font-black text-center">Admin Access</h2>
+            <input id="login-email" type="email" class="w-full border-2 p-3 rounded-xl outline-none" placeholder="البريد الإلكتروني">
+            <input id="login-pass" type="password" class="w-full border-2 p-3 rounded-xl outline-none" placeholder="كلمة المرور">
+            <button onclick="handleLogin()" id="btn-login" class="w-full bg-orange-600 text-white py-4 rounded-xl font-black flex justify-center items-center gap-2">
+                <span>تسجيل الدخول</span>
+                <div id="login-loader" class="loader hidden"></div>
+            </button>
+            <button onclick="document.getElementById('modal-login').classList.add('hidden')" class="w-full text-gray-400 text-sm">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyANZmMR3E5-QnkO-SgIY3yv5i2n7AciLkU",
+            authDomain: "achri-822f1.firebaseapp.com",
+            databaseURL: "https://achri-822f1-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "achri-822f1",
+            storageBucket: "achri-822f1.firebasestorage.app",
+            messagingSenderId: "1067421301667",
+            appId: "1:1067421301667:web:e1a47b79e2911c6d17b816"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+
+        let allProducts = [];
+        let cart = [];
+        let currentPId = null;
+        let currentImgIdx = 0;
+        let currentView = 'home';
+        let isAdmin = false;
+
+        // --- AUTH OBSERVER ---
+        auth.onAuthStateChanged(user => {
+            isAdmin = !!user;
+            document.getElementById('admin-nav-btn').classList.toggle('hidden', !isAdmin);
+            document.getElementById('logout-btn').classList.toggle('hidden', !isAdmin);
+            if(isAdmin && currentView === 'admin') loadOrders();
+            if(!isAdmin && currentView === 'admin') goHome();
+        });
+
+        window.onload = () => {
+            initWilayas();
+            loadProducts();
+            setupSecretAdmin();
+            lucide.createIcons();
+            document.getElementById('p-imgs').onchange = (e) => {
+                document.getElementById('p-img-label').innerText = `تم اختيار ${e.target.files.length} صور`;
+            }
+        };
+
+        // --- UPDATED LOGIN FUNCTION WITH DEBUGGING ---
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            const loader = document.getElementById('login-loader');
+            const btn = document.getElementById('btn-login');
+
+            if(!email || !pass) return alert("يرجى إدخال البريد الإلكتروني وكلمة المرور");
+            
+            try {
+                loader.classList.remove('hidden');
+                btn.disabled = true;
+
+                // المحاولة الفعلية لتسجيل الدخول
+                await auth.signInWithEmailAndPassword(email, pass);
+                
+                document.getElementById('modal-login').classList.add('hidden');
+                showView('admin');
+            } catch (e) {
+                console.error("Firebase Auth Error:", e.code, e.message);
+                
+                // رسائل خطأ مفصلة
+                if (e.code === 'auth/user-not-found') {
+                    alert("خطأ: هذا الحساب غير موجود.");
+                } else if (e.code === 'auth/wrong-password') {
+                    alert("خطأ: كلمة المرور غير صحيحة.");
+                } else if (e.code === 'auth/invalid-email') {
+                    alert("خطأ: صيغة البريد الإلكتروني غير صحيحة.");
+                } else if (e.code === 'auth/operation-not-allowed') {
+                    alert("خطأ: تسجيل الدخول بالبريد غير مفعل في Firebase Console.");
+                } else {
+                    alert("خطأ في تسجيل الدخول: " + e.message);
+                }
+            } finally {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+
+        function handleLogout() {
+            auth.signOut();
+            goHome();
+        }
+
+        // --- NAVIGATION ---
+        function showView(v) {
+            currentView = v;
+            document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-' + v).classList.remove('hidden');
+            document.getElementById('nav-back-btn').classList.toggle('hidden', v === 'home' && !currentPId);
+            if(v === 'admin' && isAdmin) loadOrders();
+            window.scrollTo(0,0);
+        }
+
+        function goHome() { showView('home'); }
+        function handleBack() { 
+            if (currentPId) closeDetail(); 
+            else if (currentView !== 'home') goHome(); 
+        }
+
+        // --- PRODUCT LOGIC ---
+        function loadProducts() {
+            db.ref('products').on('value', snap => {
+                const data = snap.val();
+                allProducts = data ? Object.keys(data).map(k => ({id:k, ...data[k]})) : [];
+                renderProducts();
+                renderCategories();
+            });
+        }
+
+        function renderProducts(list = allProducts) {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = list.map(p => `
+                <div onclick="openDetail('${p.id}')" class="bg-white rounded-2xl border shadow-sm overflow-hidden cursor-pointer active:scale-95">
+                    <img src="${p.images[0]}" class="w-full aspect-square object-cover bg-gray-50">
+                    <div class="p-3">
+                        <h3 class="font-bold text-sm truncate">${p.name}</h3>
+                        <p class="text-orange-600 font-black">${p.price} DA</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openDetail(id) {
+            currentPId = id; currentImgIdx = 0;
+            const p = allProducts.find(x => x.id === id);
+            document.getElementById('modal-detail').classList.remove('hidden');
+            document.getElementById('nav-back-btn').classList.remove('hidden');
+            document.getElementById('det-name').innerText = p.name;
+            document.getElementById('det-price').innerText = p.price + " DA";
+            document.getElementById('det-desc').innerText = p.description || "";
+            updateDetailImgs();
+            lucide.createIcons();
+        }
+
+        function updateDetailImgs() {
+            const p = allProducts.find(x => x.id === currentPId);
+            document.getElementById('detail-images').innerHTML = `<img src="${p.images[currentImgIdx]}" class="h-full w-full object-cover">`;
+            document.getElementById('img-dots').innerHTML = p.images.map((_, i) => `<div class="w-1.5 h-1.5 rounded-full ${i === currentImgIdx ? 'bg-orange-600 w-3' : 'bg-gray-300'}"></div>`).join('');
+        }
+
+        function nextImg() { const p = allProducts.find(x => x.id === currentPId); currentImgIdx = (currentImgIdx + 1) % p.images.length; updateDetailImgs(); }
+        function prevImg() { const p = allProducts.find(x => x.id === currentPId); currentImgIdx = (currentImgIdx - 1 + p.images.length) % p.images.length; updateDetailImgs(); }
+        function closeDetail() { document.getElementById('modal-detail').classList.add('hidden'); currentPId = null; if(currentView === 'home') document.getElementById('nav-back-btn').classList.add('hidden'); }
+
+        // --- CART & ORDERS ---
+        function addToCartFromDetail() { cart.push(allProducts.find(x => x.id === currentPId)); document.getElementById('cart-count').innerText = cart.length; renderCartUI(); closeDetail(); alert("تمت الإضافة للسلة!"); }
+        function renderCartUI() { document.getElementById('cart-items').innerHTML = cart.map((p, i) => `<div class="flex justify-between py-2 text-xs"><span>${p.name}</span><b>${p.price} DA</b></div>`).join(''); updatePrices(); }
+        function updatePrices() { const sub = cart.reduce((s, p) => s + parseInt(p.price), 0); const del = document.querySelector('input[name="del-type"]:checked').value === 'home' ? 600 : 400; document.getElementById('shipping-price').innerText = del + " DA"; document.getElementById('total-price').innerText = (sub + del) + " DA"; }
+
+        async function submitOrder() {
+            const n = document.getElementById('form-name').value; const p = document.getElementById('form-phone').value;
+            if(!n || !p || cart.length === 0) return alert("بيانات ناقصة");
+            await db.ref('orders').push({ customer: n, phone: p, wilaya: document.getElementById('form-wilaya').value, items: cart.map(i => i.name), total: document.getElementById('total-price').innerText, status: "Pending", date: new Date().toLocaleString() });
+            alert("تم إرسال طلبك!"); cart = []; location.reload();
+        }
+
+        // --- IMAGE & ADMIN LOGIC ---
+        function compressImg(file) {
+            return new Promise(res => {
+                const r = new FileReader(); r.readAsDataURL(file);
+                r.onload = e => {
+                    const img = new Image(); img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                        const MAX = 400; let w = img.width, h = img.height;
+                        if(w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } } else { if(h > MAX) { w *= MAX/h; h = MAX; } }
+                        canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
+                        res(canvas.toDataURL('image/jpeg', 0.5));
+                    }
+                }
+            });
+        }
+
+        async function addProduct() {
+            if(!isAdmin) return alert("يجب تسجيل الدخول كمسؤول أولاً");
+            const name = document.getElementById('p-name').value; const price = document.getElementById('p-price').value; const files = document.getElementById('p-imgs').files;
+            if(!name || !price || files.length === 0) return alert("بيانات المنتج ناقصة");
+            
+            try {
+                document.getElementById('btn-save').disabled = true;
+                document.getElementById('loader').classList.remove('hidden');
+                const imgStrings = [];
+                for(let f of files) imgStrings.push(await compressImg(f));
+
+                await db.ref('products').push({
+                    name, price, category: document.getElementById('p-cat').value || 'عام',
+                    description: document.getElementById('p-desc').value,
+                    images: imgStrings, likes: 0, date: Date.now()
+                });
+                alert("تمت إضافة المنتج!"); location.reload();
+            } catch (e) { alert("فشل الرفع: " + e.message); }
+        }
+
+        function loadOrders() {
+            if(!isAdmin) return;
+            db.ref('orders').on('value', snap => {
+                const list = snap.val() ? Object.values(snap.val()).reverse() : [];
+                document.getElementById('orders-list-content').innerHTML = list.map(o => `
+                    <div class="p-3 border rounded-xl bg-white shadow-sm text-xs">
+                        <div class="flex justify-between font-black text-orange-600"><span>${o.customer}</span><span>${o.total}</span></div>
+                        <p>${o.phone} | ${o.wilaya}</p>
+                        <p class="text-gray-400 italic">${o.date}</p>
+                    </div>
+                `).join('');
+            });
+        }
+
+        function setupSecretAdmin() {
+            const logo = document.getElementById('logo'); const progress = document.getElementById('hold-progress');
+            let holdTimer;
+            const onDown = () => { logo.classList.add('hold-active'); progress.style.width = '100%'; holdTimer = setTimeout(() => { document.getElementById('modal-login').classList.remove('hidden'); onUp(); }, 2000); };
+            const onUp = () => { clearTimeout(holdTimer); logo.classList.remove('hold-active'); progress.style.width = '0%'; };
+            logo.onmousedown = logo.ontouchstart = onDown; logo.onmouseup = logo.onmouseleave = logo.ontouchend = onUp;
+        }
+
+        function initWilayas() {
+            const wilayas = ["01 Adrar", "02 Chlef", "16 Alger", "31 Oran", "25 Constantine"];
+            document.getElementById('form-wilaya').innerHTML = wilayas.map(w => `<option>${w}</option>`).join('');
+        }
+
+        function renderCategories() {
+            const cats = ['الكل', ...new Set(allProducts.map(p => p.category))];
+            document.getElementById('category-bar').innerHTML = cats.map(c => `
+                <button onclick="renderProducts(allProducts.filter(p => '${c}' === 'الكل' || p.category === '${c}'))" class="bg-white border px-4 py-1 rounded-full text-[10px] font-bold shadow-sm active:bg-orange-600 active:text-white">
+                    ${c}
+                </button>
+            `).join('');
+        }
+
+        function toggleLang() {
+            const isAr = document.dir === 'rtl';
+            document.dir = isAr ? 'ltr' : 'rtl';
+            document.getElementById('lang-btn').innerText = isAr ? 'العربية' : 'English';
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
